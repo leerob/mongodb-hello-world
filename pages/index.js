@@ -1,7 +1,7 @@
-import Head from 'next/head'
-import clientPromise from '../lib/mongodb'
+import Head from 'next/head';
+import clientPromise from '../lib/mongodb';
 
-export default function Home({ isConnected }) {
+export default function Home({ name }) {
   return (
     <div className="container">
       <Head>
@@ -14,8 +14,8 @@ export default function Home({ isConnected }) {
           Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
         </h1>
 
-        {isConnected ? (
-          <h2 className="subtitle">You are connected to MongoDB</h2>
+        {name ? (
+          <h2 className="subtitle">Name: {name}</h2>
         ) : (
           <h2 className="subtitle">
             You are NOT connected to MongoDB. Check the <code>README.md</code>{' '}
@@ -219,12 +219,11 @@ export default function Home({ isConnected }) {
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 export async function getServerSideProps(context) {
   try {
-    await clientPromise
     // `await clientPromise` will use the default database passed in the MONGODB_URI
     // However you can use another database (e.g. myDatabase) by replacing the `await clientPromise` with the following code:
     //
@@ -233,14 +232,17 @@ export async function getServerSideProps(context) {
     //
     // Then you can execute queries against your database like so:
     // db.find({}) or any of the MongoDB Node Driver commands
+    const client = await clientPromise;
+    const collection = client.db('test').collection('names');
+    const result = await collection.findOne();
 
     return {
-      props: { isConnected: true },
-    }
+      props: { name: result.name },
+    };
   } catch (e) {
-    console.error(e)
+    console.error(e);
     return {
-      props: { isConnected: false },
-    }
+      props: { name: null },
+    };
   }
 }
